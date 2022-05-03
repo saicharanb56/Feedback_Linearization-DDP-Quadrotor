@@ -5,9 +5,9 @@ S.m = 0.5;
 S.Ix = 0.1;
 S.Iy = 0.1;
 S.Iz = 0.1;
-S.g = 9.8;
+S.g = -9.8;
 
-x0 = [3 2 1 0 0 0 0 0 0 0 0 0];
+x0 = [3 2 1 0.1 0.1 0.1 0 0 0 0 0 0];
 S.k0 = 1;
 S.k1 = 1;
 S.k2 = 1;
@@ -55,14 +55,14 @@ function ds = ode(t, s, S)
     f = zeros(6, 1);
 
     G = eye(6);
-    G(4:6,5:6) = [sin(a)*tan(b) cos(a)*tan(b);
+    G(4:6,5:6) = [sin(a)*tan(b)  cos(a)*tan(b);
                   cos(a)        -sin(a);
-                  sin(a)/cos(b) cos(a)/cos(b)];
+                  sin(a)/cos(b)  cos(a)/cos(b)];
 
     fa = [0; 0; S.g;
           (S.Iy-S.Iz)/S.Ix * q * r;
-          (S.Iz-S.Ix)/S.Iy * q * r;
-          (S.Ix-S.Iy)/S.Iz * q * r];
+          (S.Iz-S.Ix)/S.Iy * p * r;
+          (S.Ix-S.Iy)/S.Iz * p * q];
 
     Ga = zeros(6, 4);
     Ga(1,1) = -1/S.m * (sin(a)*sin(c) + cos(a)*sin(b)*cos(c));
