@@ -5,16 +5,25 @@ S.m = 0.5;
 S.Ix = 0.1;
 S.Iy = 0.1;
 S.Iz = 0.1;
-S.g = 0;
+S.g = -9.8;
 
-x0 = [3 2 1 0.1 0.1 0.1 0 0 0 0 0 0];
-S.k0 = 1;
-S.k1 = 1;
+x0 = [1 2 3 0.1 0.1 0.1 0.5 0.5 0.5 -0.4 -0.2 -0.2];
+
+S.k1 = .1;
 S.k2 = 1;
 
 [ts, xs] = ode45(@(t,x) ode(t,x,S), [0 T], x0);
 
-plot(ts,xs(:,1), ts,xs(:,2), ts,xs(:,3))
+figure(1); clf;
+subplot(2,1,1);
+plot(ts,xs(:,1), ts,xs(:,2), ts,xs(:,3), ...
+     ts,xs(:,4), ts,xs(:,5), ts,xs(:,6))
+legend({'x', 'y', 'z', 'a', 'b', 'c'}, 'Location', 'best')
+
+subplot(2,1,2);
+plot(ts,xs(:,7), ts,xs(:,8), ts,xs(:,9), ...
+     ts,xs(:,10), ts,xs(:,11), ts,xs(:,12))
+legend({'dx', 'dy', 'dz', 'p', 'q', 'r'}, 'Location', 'best')
 
 function [x, y, z, a, b, c, dx, dy, dz, p, q, r] = state(s)
 
@@ -28,10 +37,10 @@ function u = control(s, S, f, G, fa, Ga)
     [x, y, z, a, b, c, dx, dy, dz, p, q, r] = state(s);
     xi = [dx; dy; dz; p; q; r];
 
-    Phi = -S.k1 * [x; y; z; 
-                   a - c*sin(b);
-                   c*sin(a)*cos(b) + b*cos(a);
-                   c*cos(a)*cos(b) - b*sin(a)];
+    Phi = [-S.k1 * x; -S.k1 * y; -S.k1 * z; 
+           -S.k1 * (a - c*sin(b));
+           -S.k1 * (c*sin(a)*cos(b) + b*cos(a));
+           -S.k1 * (c*cos(a)*cos(b) - b*sin(a))];
 
     Z = xi - Phi;
 
@@ -66,7 +75,7 @@ function ds = ode(t, s, S)
 
     Ga = zeros(6, 4);
     Ga(1,1) = -1/S.m * (sin(a)*sin(c) + cos(a)*sin(b)*cos(c));
-    Ga(2,1) = -1/S.m * (cos(a)*sin(c) - cos(a)*sin(b)*sin(c));
+    Ga(2,1) = -1/S.m * (sin(a)*cos(c) - cos(a)*sin(b)*sin(c));
     Ga(3,1) = -1/S.m * (cos(a) * cos(b));
     Ga(4,2) = 1/S.Ix; Ga(5,3) = 1/S.Iy; Ga(6,4) = 1/S.Iz;
     
