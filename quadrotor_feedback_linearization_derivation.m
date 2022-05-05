@@ -1,17 +1,22 @@
 clear; clc;
 
+% Feedback Linearization
+% Original system:
+%   s = [x y z a b c dx dy dz p q r]'
+%   ds = F + G * U
+%
+% Linearized system:
+%   Y = [x y z c]'
+%   Ya = [x y z c u1 du1]'
+%   Ua = [du1 u2 u3 u4]'
+%   dYa = [f1;f2] + [G1;G2] * Ua
+
+
 syms x y z a b c dx dy dz p q r real
 syms dx dy dz da db dc d2x d2y d2z dp dq dr real
 syms u1 u2 u3 u4 real
 syms m Ix Iy Iz g real
-
-syms x_(t) y_(t) z_(t) a_(t) b_(t) c_(t) dx_(t) dy_(t) dz_(t) p_(t) q_(t) r_(t)
-syms u1_(t) u2_(t) u3_(t) u4_(t)
-
 S1 = [x y z a b c dx dy dz p q r];
-S1_ = [x_ y_ z_ a_ b_ c_ dx_ dy_ dz_ p_ q_ r_];
-S2 = [dx dy dz da db dc d2x d2y d2z dp dq dr];
-S2_ = [diff(x_,t) diff(y_,t) diff(z_,t) diff(a_,t) diff(b_,t) diff(c_,t) diff(dx_,t) diff(dy_,t) diff(dz_,t) diff(p_,t) diff(q_,t) diff(r_,t)];
 
 F = [dx; dy; dz; 
      p + q*sin(a)*tan(b) + r*cos(a)*tan(b);
@@ -30,15 +35,6 @@ G(10,2) = 1/Ix; G(11,3) = 1/Iy; G(12,4) = 1/Iz;
 
 U = [u1; u2; u3; u4];
 
-% h = [x; y; z];
-% 
-% ph = jacobian(h, S1);
-% 
-% Lfh = ph * F;
-% Lgh = ph * G;
-% 
-% LfLfh = jacobian(Lfh, S1) * F;
-% LgLfh = jacobian(Lfh, S1) * G;
 syms du1 d2u1 real
 
 Y1 = [x; y; z];
@@ -58,9 +54,9 @@ d4Y1 = jacobian(d3Y1, [S1 u1 du1]) * [F+G*U; du1; d2u1];
 d4Y1 = simplify(d4Y1);
 
 G1 = jacobian(d4Y1, Ua);
-G1 = simplify(G1);
+G1 = simplify(G1)
 f1 = d4Y1 - G1*Ua;
-f1 = simplify(f1);
+f1 = simplify(f1)
 % check linearity, should be all 0
 jacobian(f1, Ua)
 
@@ -72,9 +68,9 @@ d2Y2 = jacobian(dY2, S1) * (F+G*U);
 d2Y2 = simplify(d2Y2);
 
 G2 = jacobian(d2Y2, Ua);
-G2 = simplify(G2);
+G2 = simplify(G2)
 f2 = d2Y2 - G2*Ua;
-f2 = simplify(f2);
+f2 = simplify(f2)
 % check linearity, should be all 0
 jacobian(f2, Ua)
 
