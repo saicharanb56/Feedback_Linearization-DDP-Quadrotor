@@ -7,9 +7,8 @@ clear; clc;
 %
 % Linearized system:
 %   Y = [x y z c]'
-%   Ya = [x y z c u1 du1]'
-%   Ua = [du1 u2 u3 u4]'
-%   dYa = [f1;f2] + [G1;G2] * Ua
+%   Ua = [d2u1 u2 u3 u4]'
+%   dY = [F1;F2] + [G1;G2] * Ua
 
 
 syms x y z a b c dx dy dz p q r real
@@ -55,10 +54,10 @@ d4Y1 = simplify(d4Y1);
 
 G1 = jacobian(d4Y1, Ua);
 G1 = simplify(G1)
-f1 = d4Y1 - G1*Ua;
-f1 = simplify(f1)
+F1 = d4Y1 - G1*Ua;
+F1 = simplify(F1)
 % check linearity, should be all 0
-jacobian(f1, Ua)
+jacobian(F1, Ua)
 
 
 dY2 = jacobian(Y2, S1) * (F+G*U);
@@ -69,8 +68,8 @@ d2Y2 = simplify(d2Y2);
 
 G2 = jacobian(d2Y2, Ua);
 G2 = simplify(G2)
-f2 = d2Y2 - G2*Ua;
-f2 = simplify(f2)
+F2 = d2Y2 - G2*Ua;
+F2 = simplify(F2)
 % check linearity, should be all 0
-jacobian(f2, Ua)
+jacobian(F2, Ua)
 
