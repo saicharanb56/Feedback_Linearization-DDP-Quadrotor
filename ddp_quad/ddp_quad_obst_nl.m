@@ -1,4 +1,9 @@
-function f = ddp_quad_obst_nl()
+function f = ddp_quad_obst_nl(initState, tf)
+
+    if nargin < 2
+        initState = [-5; -5; 3.5];
+        tf = 10;
+    end
 
     % time horizon and segments
     tf = 30;
@@ -7,7 +12,7 @@ function f = ddp_quad_obst_nl()
     
     % cost function parameters
     S.Q = 0.0*diag([20, 20, 2, ones(1,9)]);
-    S.R = diag([10, 5, 5, 5]);
+    S.R = 0.8*diag([10, 5, 5, 5]);
     S.Qf = diag([2, 2, 2, ones(1,9)]);
     
     S.f = @quad_f;
@@ -16,7 +21,7 @@ function f = ddp_quad_obst_nl()
     S.mu = 0;
     
     % initial state
-    x0 = [-5; -5; 3.5; zeros(9,1)];
+    x0 = [initState; zeros(9,1)];
     
     S.os(1).p = [-4;0;2.2];
     S.os(1).r = 1;
