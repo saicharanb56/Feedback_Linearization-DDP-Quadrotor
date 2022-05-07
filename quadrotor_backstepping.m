@@ -101,17 +101,17 @@ function ds = ode(t, s, S)
     Ga(4,2) = 1/S.Ix; Ga(5,3) = 1/S.Iy; Ga(6,4) = 1/S.Iz;
     
     %%%%% test dynamics
-    G = eye(6);
-    fa = zeros(6,1);
-    Ga = [[1; 2] zeros(2,3); eye(4)];
+%     G = eye(6);
+%     fa = zeros(6,1);
+%     Ga = [[1; 2] zeros(2,3); eye(4)];
     %%%%% test dynamics
     
     u = control(t, s, S, f, G, fa, Ga);
 
     %%%%% test control
-    eta = [x; y; z; a; b; c];
-    xi = [dx; dy; dz; p; q; r];
-    u = pinv(Ga) * (-S.k2*xi + S.k1*S.k2*inv(G)*eta - fa - S.k1*inv(G)*eta);
+%     eta = [x; y; z; a; b; c];
+%     xi = [dx; dy; dz; p; q; r];
+%     u = pinv(Ga) * (-S.k2*xi + S.k1*S.k2*inv(G)*eta - fa - S.k1*inv(G)*eta);
     %%%%% test control
 
     deta = f + G * xi;
