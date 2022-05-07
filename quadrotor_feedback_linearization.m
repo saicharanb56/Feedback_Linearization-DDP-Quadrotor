@@ -49,10 +49,10 @@ S.k0 = 1; S.k1 = 1; S.k2 = 1; S.k3 = 1; S.k4= 1; S.k5 = 1;
 [ts, sas] = ode45(@(t,sa) quadrotor_ode(t,sa,S), [0 T], sa0);
 
 figure(1); clf; box on; grid on; hold on;
-plot(ts, sas(:, 1));
-plot(ts, sas(:, 2));
-plot(ts, sas(:, 3));
-plot(ts, sas(:, 6));
+plot(ts, sas(:, 1), 'LineWidth',2);
+plot(ts, sas(:, 2), 'LineWidth',2);
+plot(ts, sas(:, 3), 'LineWidth',2);
+plot(ts, sas(:, 6), 'LineWidth',2);
 legend({'x (m)', 'y (m)', 'z (m)', 'c (rad)'}, 'Location','best')
 
 
