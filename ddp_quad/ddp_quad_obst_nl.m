@@ -7,7 +7,7 @@ function f = ddp_quad_obst_nl(initState, tf)
 
     % time horizon and segments
     tf = 30;
-    S.N = 1000;
+    S.N = 100;
     S.h = tf/S.N;
     
     % cost function parameters

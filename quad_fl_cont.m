@@ -26,7 +26,7 @@ S.T = T;
 
 % initial states
 xyz0 = [-5 -5 3.5]';
-abc0 = [0 0 -1]';
+abc0 = [0 0 0]';
 vel0 = [0 0 0]';
 pqr0 = [0 0 0]';
 dxyzc = [0 0 0 0 0 0 0]';
@@ -37,32 +37,15 @@ sa0 = [xyz0; abc0; vel0; pqr0; dxyzc; u1du1];
 xyzcd = [0 0 0 0]';
 dxyzcd = [0 0 0 0]';
 
-% A matrix for virtual control input
-Y = [[xyz0;abc0(3)] [vel0;pqr0(3)] zeros(4,3) xyzcd dxyzcd zeros(4,3)];
-L = [lambda(0,1:5) lambda(T,1:5)];
-S.A = Y / L;
-
 % Generate trajectory using DDP
 desired = ddp_quad_obst_nl(xyz0, T);
-S.yd = desired.xs;
-S.ydDot1 = diff(S.yd, 1, 2)*T/size(S.yd,2);
-S.ydDot1 = [zeros(size(S.yd,1),1) S.ydDot1];
-S.ydDot2 = diff(S.ydDot1, 1, 2)*T/size(S.ydDot1,2);
-S.ydDot2 = [zeros(size(S.ydDot2,1),1) S.ydDot2];
-S.ydDot3 = diff(S.ydDot2, 1, 2)*T/size(S.ydDot2,2);
-S.ydDot3 = [zeros(size(S.ydDot3,1),1) S.ydDot3];
-S.ydDot4 = diff(S.ydDot3, 1, 2)*T/size(S.ydDot3,2);
-S.ydDot4 = [zeros(size(S.ydDot4,1),1) S.ydDot4];
 
-% L = [lambda(t1,1:5) lambda(t2,1:5)];
-% A = Y / L;
-
-% Yd = A * lambda(t, 1);
-% dYd = A * lambda(t, 2);
-% d2Yd = A * lambda(t, 3);
-% d3Yd = A * lambda(t, 4);
-% d4Yd = A * lambda(t, 5);
-
+yd = [desired.xs zeros(12,1)];
+traj_ts = linspace(0, T, size(yd,2));
+S.poly_coef = [ polyfit(traj_ts, yd(1,:), 10);
+                polyfit(traj_ts, yd(2,:), 10);
+                polyfit(traj_ts, yd(3,:), 10);
+                polyfit(traj_ts, yd(6,:), 10)];
 
 
 % controller
@@ -78,11 +61,7 @@ plot(ts, sas(:, 6), 'LineWidth',2);
 legend({'x (m)', 'y (m)', 'z (m)', 'c (rad)'}, 'Location','best')
 hold off
 
-td = 0:T/size(S.yd,2):T;
 
-figure(2);
-grid on
-plot()
 
 
 function dsa = quadrotor_ode(t, sa, S)
@@ -109,21 +88,18 @@ function dsa = quadrotor_ode(t, sa, S)
     
     
     % controls
-    Ua = fl_control(t, sa, S);
+    [Ua, d4Yd, d2Yd] = fl_control(t, sa, S);
     U = [u1; Ua(2:4)];
     d2u1 = Ua(1);
     
 
     % dynamcis
     ds = F + G * U;
-    
-    d4Yd = S.A * lambda(t, 5);
-    d2Yd = S.A * lambda(t, 3);
     dsa = [ds; d3x; d4Yd(1); d3y; d4Yd(2); d3z; d4Yd(3); d2Yd(4); du1; d2u1];
 
 end
 
-function Ua = fl_control(t, sa, S)
+function [Ua, d4Yd, d2Yd] = fl_control(t, sa, S)
 
     [x, y, z, a, b, c, dx, dy, dz, p, q, r, ... 
         d2x, d3x, d2y, d3y, d2z, d3z, dc, u1, du1] = get_state(sa);
@@ -156,56 +132,38 @@ function Ua = fl_control(t, sa, S)
     dY2 = dc;
     
     % desired output
-%     Yd = S.A * lambda(t, 1);
-%     dYd = S.A * lambda(t, 2);
-%     d2Yd = S.A * lambda(t, 3);
-%     d3Yd = S.A * lambda(t, 4);
-%     d4Yd = S.A * lambda(t, 5);
-
-    if t ~= S.T
-        idx = floor(t*size(S.yd,2)/S.T) + 1;
-    else
-        idx = floor(t*size(S.yd,2)/S.T);
-    end
-    disp(idx)
-    oi = [1 2 3 6];
-
-    t1 = (idx - 1)*S.T/size(S.yd,2);
-    t2 = idx*S.T/size(S.yd,2);
-
-    if idx == size(S.yd,2)
-        Y = [S.yd(oi,idx) S.ydDot1(oi,idx) S.ydDot2(oi,idx) S.ydDot3(oi,idx) S.ydDot4(oi,idx) ...
-         S.yd(oi,idx) S.ydDot1(oi,idx) S.ydDot2(oi,idx) S.ydDot3(oi,idx) S.ydDot4(oi,idx) ];
-%         t1 = t;
-%         t2 = t;
-    else
-        Y = [S.yd(oi,idx) S.ydDot1(oi,idx) S.ydDot2(oi,idx) S.ydDot3(oi,idx) S.ydDot4(oi,idx) ...
-         S.yd(oi,idx+1) S.ydDot1(oi,idx+1) S.ydDot2(oi,idx+1) S.ydDot3(oi,idx+1) S.ydDot4(oi,idx+1) ];
-    end
-
-    t1
-    t2
-
-    L = [lambda(t1,1:5) lambda(t2,1:5)];
-    A = Y / L;
-
-    Yd = A * lambda(t, 1);
-    dYd = A * lambda(t, 2);
-    d2Yd = A * lambda(t, 3);
-    d3Yd = A * lambda(t, 4);
-    d4Yd = A * lambda(t, 5);
-
-%     dYd = S.ydDot1(states_used, idx);
-%     d2Yd = S.ydDot2(states_used, idx);
-%     d3Yd = S.ydDot3(states_used, idx);
-%     d4Yd = S.ydDot4(states_used, idx);
+    Yd = poly(t, 0, S);
+    dYd = poly(t, 1, S);
+    d2Yd = poly(t, 2, S);
+    d3Yd = poly(t, 3, S);
+    d4Yd = poly(t, 4, S);
 
     % virtural control
     V1 = d4Yd(1:3) - S.k0*(Y1-Yd(1:3)) - S.k1*(dY1-dYd(1:3)) - S.k2*(d2Y1-d2Yd(1:3)) - S.k3*(d3Y1-d3Yd(1:3));
     V2 = d2Yd(4) - S.k4*(Y2-Yd(4)) - S.k5*(dY2-dYd(4));
     
     Ua = ([G1; G2]) \ ( [V1; V2] - [F1; F2] );
+    
 
+end
+
+function val = poly(t, n, S)
+    
+    L = [...
+    [t^10, 10*t^9, 90*t^8, 720*t^7, 5040*t^6]
+    [ t^9,  9*t^8, 72*t^7, 504*t^6, 3024*t^5]
+    [ t^8,  8*t^7, 56*t^6, 336*t^5, 1680*t^4]
+    [ t^7,  7*t^6, 42*t^5, 210*t^4,  840*t^3]
+    [ t^6,  6*t^5, 30*t^4, 120*t^3,  360*t^2]
+    [ t^5,  5*t^4, 20*t^3,  60*t^2,    120*t]
+    [ t^4,  4*t^3, 12*t^2,    24*t,       24]
+    [ t^3,  3*t^2,    6*t,       6,        0]
+    [ t^2,    2*t,      2,       0,        0]
+    [   t,      1,      0,       0,        0]
+    [   1,      0,      0,       0,        0]
+    ];
+
+    val = S.poly_coef * L(:,n+1) ;
 end
 
 function [x, y, z, a, b, c, dx, dy, dz, p, q, r, ... 
@@ -226,22 +184,4 @@ function [x, y, z, a, b, c, dx, dy, dz, p, q, r, ...
 
 end
 
-function Li = lambda(t, i)
-    
-    L = [...
-    [   1,      0,      0,       0,        0]
-    [   t,      1,      0,       0,        0]
-    [ t^2,    2*t,      2,       0,        0]
-    [ t^3,  3*t^2,    6*t,       6,        0]
-    [ t^4,  4*t^3, 12*t^2,    24*t,       24]
-    [ t^5,  5*t^4, 20*t^3,  60*t^2,    120*t]
-    [ t^6,  6*t^5, 30*t^4, 120*t^3,  360*t^2]
-    [ t^7,  7*t^6, 42*t^5, 210*t^4,  840*t^3]
-    [ t^8,  8*t^7, 56*t^6, 336*t^5, 1680*t^4]
-    [ t^9,  9*t^8, 72*t^7, 504*t^6, 3024*t^5]
-    [t^10, 10*t^9, 90*t^8, 720*t^7, 5040*t^6]
-    ];
-    Li = L(:, i);
-
-end
 
