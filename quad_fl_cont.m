@@ -42,17 +42,24 @@ Y = [[xyz0;abc0(3)] [vel0;pqr0(3)] zeros(4,3) xyzcd dxyzcd zeros(4,3)];
 L = [lambda(0,1:5) lambda(T,1:5)];
 S.A = Y / L;
 
-% Traj = TrajGen(xyz0);
-desired = ddp_quad_obst_nl(xyz0, 10);
-S.yd = desired.xs;
-S.ydDot1 = diff(S.yd, 1, 2)*T/size(S.yd,2);
-S.ydDot1 = [zeros(12,1), S.ydDot1];
-S.ydDot2 = diff(S.ydDot1, 1, 2)*T/size(S.yd,2);
-S.ydDot2 = [zeros(12,1), S.ydDot2];
-S.ydDot3 = diff(S.ydDot2, 1, 2)*T/size(S.yd,2);
-S.ydDot3 = [zeros(12,1), S.ydDot3];
-S.ydDot4 = diff(S.ydDot3, 1, 2)*T/size(S.yd,2);
-S.ydDot4 = [zeros(12,1), S.ydDot4];
+% Calculating desired output values
+% desired output
+oi = [1 2 3 6];
+index = 0;
+Y = [yd(oi,index) ydDot1(oi,index) ydDot2(oi,index) ydDot3oi,index) ydDot4(oi,index) ...
+     yd(oi,index+1) ydDot1(oi,index+1) ydDot2(oi,index+1) ydDot3oi,index+1) ydDot4(oi,index+1) ];
+t1 = 
+t2 = 
+L = [lambda(t1,1:5) lambda(t2,1:5)];
+A = Y / L;
+
+Yd = A * lambda(t, 1);
+dYd = A * lambda(t, 2);
+d2Yd = A * lambda(t, 3);
+d3Yd = A * lambda(t, 4);
+d4Yd = A * lambda(t, 5);
+
+
 
 % controller
 S.k0 = 1; S.k1 = 1; S.k2 = 1; S.k3 = 1; S.k4= 1; S.k5 = 1; 
@@ -150,8 +157,24 @@ function Ua = fl_control(t, sa, S)
         idx = floor(t*size(S.yd,2)/S.T);
     end
     disp(idx)
-    states_used = [1, 2, 3, 6];
-    Yd = S.yd(states_used, idx);
+    oi = [1 2 3 6];
+    desired = ddp_quad_obst_nl(xyz0, 10);
+    S.yd = desired.xs;
+
+    Y = [yd(oi,idx) ydDot1(oi,idx) ydDot2(oi,idx) ydDot3(oi,idx) ydDot4(oi,idx) ...
+         yd(oi,idx+1) ydDot1(oi,idx+1) ydDot2(oi,idx+1) ydDot3(oi,idx+1) ydDot4(oi,idx+1) ];
+    t1 = 
+    t2 = 
+    L = [lambda(t1,1:5) lambda(t2,1:5)];
+    A = Y / L;
+
+    Yd = A * lambda(t, 1);
+    dYd = A * lambda(t, 2);
+    d2Yd = A * lambda(t, 3);
+    d3Yd = A * lambda(t, 4);
+    d4Yd = A * lambda(t, 5);
+
+
     dYd = S.ydDot1(states_used, idx);
     d2Yd = S.ydDot2(states_used, idx);
     d3Yd = S.ydDot3(states_used, idx);
