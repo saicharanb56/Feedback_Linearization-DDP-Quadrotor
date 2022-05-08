@@ -42,22 +42,26 @@ Y = [[xyz0;abc0(3)] [vel0;pqr0(3)] zeros(4,3) xyzcd dxyzcd zeros(4,3)];
 L = [lambda(0,1:5) lambda(T,1:5)];
 S.A = Y / L;
 
-% Calculating desired output values
-% desired output
-oi = [1 2 3 6];
-index = 0;
-Y = [yd(oi,index) ydDot1(oi,index) ydDot2(oi,index) ydDot3oi,index) ydDot4(oi,index) ...
-     yd(oi,index+1) ydDot1(oi,index+1) ydDot2(oi,index+1) ydDot3oi,index+1) ydDot4(oi,index+1) ];
-t1 = 
-t2 = 
-L = [lambda(t1,1:5) lambda(t2,1:5)];
-A = Y / L;
+% Generate trajectory using DDP
+desired = ddp_quad_obst_nl(xyz0, T);
+S.yd = desired.xs;
+S.ydDot1 = diff(S.yd, 1, 2)*T/size(S.yd,2);
+S.ydDot1 = [zeros(size(S.yd,1),1) S.ydDot1];
+S.ydDot2 = diff(S.ydDot1, 1, 2)*T/size(S.ydDot1,2);
+S.ydDot2 = [zeros(size(S.ydDot2,1),1) S.ydDot2];
+S.ydDot3 = diff(S.ydDot2, 1, 2)*T/size(S.ydDot2,2);
+S.ydDot3 = [zeros(size(S.ydDot3,1),1) S.ydDot3];
+S.ydDot4 = diff(S.ydDot3, 1, 2)*T/size(S.ydDot3,2);
+S.ydDot4 = [zeros(size(S.ydDot4,1),1) S.ydDot4];
 
-Yd = A * lambda(t, 1);
-dYd = A * lambda(t, 2);
-d2Yd = A * lambda(t, 3);
-d3Yd = A * lambda(t, 4);
-d4Yd = A * lambda(t, 5);
+% L = [lambda(t1,1:5) lambda(t2,1:5)];
+% A = Y / L;
+
+% Yd = A * lambda(t, 1);
+% dYd = A * lambda(t, 2);
+% d2Yd = A * lambda(t, 3);
+% d3Yd = A * lambda(t, 4);
+% d4Yd = A * lambda(t, 5);
 
 
 
@@ -72,6 +76,13 @@ plot(ts, sas(:, 2), 'LineWidth',2);
 plot(ts, sas(:, 3), 'LineWidth',2);
 plot(ts, sas(:, 6), 'LineWidth',2);
 legend({'x (m)', 'y (m)', 'z (m)', 'c (rad)'}, 'Location','best')
+hold off
+
+td = 0:T/size(S.yd,2):T;
+
+figure(2);
+grid on
+plot()
 
 
 function dsa = quadrotor_ode(t, sa, S)
@@ -158,13 +169,23 @@ function Ua = fl_control(t, sa, S)
     end
     disp(idx)
     oi = [1 2 3 6];
-    desired = ddp_quad_obst_nl(xyz0, 10);
-    S.yd = desired.xs;
 
-    Y = [yd(oi,idx) ydDot1(oi,idx) ydDot2(oi,idx) ydDot3(oi,idx) ydDot4(oi,idx) ...
-         yd(oi,idx+1) ydDot1(oi,idx+1) ydDot2(oi,idx+1) ydDot3(oi,idx+1) ydDot4(oi,idx+1) ];
-    t1 = 
-    t2 = 
+    t1 = (idx - 1)*S.T/size(S.yd,2);
+    t2 = idx*S.T/size(S.yd,2);
+
+    if idx == size(S.yd,2)
+        Y = [S.yd(oi,idx) S.ydDot1(oi,idx) S.ydDot2(oi,idx) S.ydDot3(oi,idx) S.ydDot4(oi,idx) ...
+         S.yd(oi,idx) S.ydDot1(oi,idx) S.ydDot2(oi,idx) S.ydDot3(oi,idx) S.ydDot4(oi,idx) ];
+%         t1 = t;
+%         t2 = t;
+    else
+        Y = [S.yd(oi,idx) S.ydDot1(oi,idx) S.ydDot2(oi,idx) S.ydDot3(oi,idx) S.ydDot4(oi,idx) ...
+         S.yd(oi,idx+1) S.ydDot1(oi,idx+1) S.ydDot2(oi,idx+1) S.ydDot3(oi,idx+1) S.ydDot4(oi,idx+1) ];
+    end
+
+    t1
+    t2
+
     L = [lambda(t1,1:5) lambda(t2,1:5)];
     A = Y / L;
 
@@ -174,11 +195,10 @@ function Ua = fl_control(t, sa, S)
     d3Yd = A * lambda(t, 4);
     d4Yd = A * lambda(t, 5);
 
-
-    dYd = S.ydDot1(states_used, idx);
-    d2Yd = S.ydDot2(states_used, idx);
-    d3Yd = S.ydDot3(states_used, idx);
-    d4Yd = S.ydDot4(states_used, idx);
+%     dYd = S.ydDot1(states_used, idx);
+%     d2Yd = S.ydDot2(states_used, idx);
+%     d3Yd = S.ydDot3(states_used, idx);
+%     d4Yd = S.ydDot4(states_used, idx);
 
     % virtural control
     V1 = d4Yd(1:3) - S.k0*(Y1-Yd(1:3)) - S.k1*(dY1-dYd(1:3)) - S.k2*(d2Y1-d2Yd(1:3)) - S.k3*(d3Y1-d3Yd(1:3));
