@@ -60,7 +60,7 @@ A = [ polyfit(traj_ts, yd_ddp(1,:), 6)
 
 % plot desired path
 X = A*poly3(0:.01:T);
-plot(X(1,:), X(2,:), '-r')
+plot(X(1,:), X(2,:), '-r', 'LineWidth', 2)
 hold on
 %%
 
@@ -71,7 +71,7 @@ S.A = A;
 S.k0 = 0.33; S.k1 = 1.667; S.k2 = 120; S.k3 = 3;
 
 % perturb initial condition
-x = x0 ;
+x = x0 + [0.1; 0.1; 0; 0; 0; 0];
 
 % augmented state with dynamic compensator, i.e xi=u1
 xa = [x; S.u1; S.u1dot];
@@ -80,9 +80,9 @@ xa = [x; S.u1; S.u1dot];
 [ts, xas] = ode45(@uni_ode, [0 T], xa, [], S);
 
 % visualize
-plot(xas(:,1), xas(:,2), '-b');
+plot(xas(:,1), xas(:,2), '-b', 'LineWidth', 2);
 legend('desired', 'executed')
-title('Trajectory of car')
+title('Trajectory Tracking of Quadcopter')
 xlabel('x1'); ylabel('x2');
 hold off
 

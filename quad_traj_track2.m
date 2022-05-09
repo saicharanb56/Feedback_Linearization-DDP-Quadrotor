@@ -1,4 +1,4 @@
-function xas = quad_traj_track2()
+% function A = quad_traj_track()
 % EN.530.678: HW#4 sample
 % 1) compute a reference path using a polynomial in flat output space
 % 2) track the path using backstepping
@@ -7,9 +7,10 @@ function xas = quad_traj_track2()
 
 
 % boundary conditions in state space
-x0 = [-5; -5; 0; 0; 0; 0];
+x0 = [-7; 2; 0; 0; 0; 0];
 xf = [0; 0; 0; 0; 0; 0];
 T = 10;
+S.T = T;
 
 %%%%%%%%% TRAJECTORY GENERATION %%%%%%%%%%%%%
 
@@ -25,41 +26,67 @@ S.u1dot = 1;
 S.u1ddot = 1;
 S.u2 = 1;
 
+% ddp trajectory generation
+desired = ddp_quad_obst_nl([x0(1); 0; x0(2)], T);
+close all;
+%%
+
+S.xs = desired.xs;
+
+% modify to 2D
+yd_ddp = [ desired.xs(1,:);
+           desired.xs(3,:)];
+
+yd_ddp = [yd_ddp(:,1)+rand(size(yd_ddp,1),10)*0.1 yd_ddp];
+
+traj_ts = linspace(-1,T,size(yd_ddp,2));
+A = [ polyfit(traj_ts, yd_ddp(1,:), 6)
+      polyfit(traj_ts, yd_ddp(2,:), 6)];
+
+
 % boundary conditions in flat output space 
-y0 = uni_h(x0);
-yf = uni_h(xf);
-dy0 = x0(4:6);
-dyf = xf(4:6);
-d2y0 = (1/S.m)*Rot(x0(3))*[0; S.u1] + [0; -9.81];
-d2y0 = [d2y0; S.u2/S.J];
-d2yf = (1/S.m)*Rot(xf(3))*[0; S.u1] + [0; -9.81];
-d2yf = [d2yf; S.u2/S.J];
+% y0 = uni_h(x0);
+% yf = uni_h(xf);
+% dy0 = x0(4:5);
+% dyf = xf(4:5);
+% d2y0 = (1/S.m)*Rot(x0(3))*[0; S.u1] + [0; -9.81];
+% d2yf = (1/S.m)*Rot(xf(3))*[0; S.u1] + [0; -9.81];
+% d3y0 = (1/S.m)*Rot(x0(3))*[-S.u1*x0(6); S.u1dot];
+% d3yf = (1/S.m)*Rot(xf(3))*[-S.u1*xf(6); S.u1dot];
+% d4y0 = (1/S.m)*Rot(x0(3))*[-2*S.u1dot*x0(6); S.u1*x0(6)^2] + (1/S.m)*Rot(x0(3))*[-S.u1*S.u2/S.J; S.u1ddot];
+% d4yf = (1/S.m)*Rot(xf(3))*[-2*S.u1dot*xf(6); S.u1*xf(6)^2] + (1/S.m)*Rot(xf(3))*[-S.u1*S.u2/S.J; S.u1ddot];
 
 % compute path coefficients
-A = poly3_coeff(y0, dy0, d2y0, yf, dyf, d2yf, T);
+% A = poly3_coeff(y0, dy0, d2y0, d3y0, d4y0, yf, dyf, d2yf, d3yf, d4yf, T);
+% A = poly3_coeff(y0, dy0, d2y0, yf, dyf, d2yf, T);
+
+% A = randn(2,7);
 
 % plot desired path
 X = A*poly3(0:.01:T);
-plot(X(1,:), X(2,:), '-r')
+plot(X(1,:), X(2,:), '-r', 'LineWidth', 2)
 hold on
-
+%%
 
 %%%%%%%%% TRAJECTORY TRACKING %%%%%%%%%%%%%
 S.A = A;
 
 % gains
-S.k0 = 1; S.k1 = 1; S.k2 = 1; S.k3 = 1;
+S.k0 = 20; S.k1 = 80; S.k2 = 200; S.k3 = 3;
 
 % perturb initial condition
-x = x0 ;
+x = x0 + [0.5; 0.5; 0; 0; 0; 0];
+
+% augmented state with dynamic compensator, i.e xi=u1
+xa = [x; S.u1; S.u1dot];
 
 % simulate system
-[ts, xas] = ode45(@uni_ode, [0 T], x, [], S);
+[ts, xas] = ode45(@uni_ode, [0 T], xa, [], S);
 
 % visualize
-plot(xas(:,1), xas(:,2), '-b');
+plot(xas(:,1), xas(:,2), '-b', 'LineWidth', 2);
 legend('desired', 'executed')
-title('Trajectory of quadcopter')
+title('Trajectory Tracking of Quadcopter')
 xlabel('x1'); ylabel('x2');
 hold off
 
@@ -70,9 +97,18 @@ hold off
 % plot(ts, xas(:,3))
 % legend('x', 'y', 'yaw')
 
-end
+% end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+
+% function A = poly3_coeff(y0, dy0, d2y0, d3y0, d4y0, yf, dyf, d2yf, d3yf, d4yf, T)
+% % computes cubic curve connecting (y0,dy0) and (yf, dyf) at time T
+% 
+% Y = [y0, dy0, d2y0, d3y0, d4y0, yf, dyf, d2yf, d3yf, d4yf];
+% L = [poly3(0), dpoly3(0), d2poly3(0), d3poly3(0), d4poly3(0) ...
+%      poly3(T), dpoly3(T), d2poly3(T), d3poly3(T), d4poly3(T)];
+% A = Y/L;
+% end
 
 function A = poly3_coeff(y0, dy0, d2y0, yf, dyf, d2yf, T)
 % computes cubic curve connecting (y0,dy0) and (yf, dyf) at time T
@@ -87,7 +123,7 @@ end
 
 function y = uni_h(x)
 % output function
-    y = x(1:3);
+    y = x(1:2);
 end
 
 function f = poly3(t)
@@ -102,6 +138,34 @@ function f = d2poly3(t)
     f = [30*t.^4; 20*t.^3; 12*t.^2; 6*t; 2; zeros(size(t)); zeros(size(t))];
 end
 
+function f = d3poly3(t)
+    f = [120*t.^3; 60*t.^2; 24*t; 6; zeros(size(t)); zeros(size(t)); zeros(size(t))];
+end
+
+function f = d4poly3(t)
+    f = [360*t.^2; 120*t; 24; zeros(size(t)); zeros(size(t)); zeros(size(t)); zeros(size(t))];
+end
+
+% function f = poly3(t)
+%     f = [t.^10; t.^9; t.^8; t.^7; t.^6; t.^5; t.^4; t.^3; t.^2; t; ones(size(t))];
+% end
+% 
+% function f = dpoly3(t)
+%     f = [10*t.^9; 9*t.^8; 8*t.^7; 7*t.^6; 6*t.^5; 5*t.^4; 4*t.^3; 3*t.^2; 2*t; ones(size(t)); zeros(size(t))];
+% end
+% 
+% function f = d2poly3(t)
+%     f = [90*t.^8; 72*t.^7; 56*t.^6; 42*t.^5; 30*t.^4; 20*t.^3; 12*t.^2; 6*t; 2; zeros(size(t)); zeros(size(t))];
+% end
+% 
+% function f = d3poly3(t)
+%     f = [720*t.^7; 504*t.^6; 336*t.^5; 210*t.^4; 120*t.^3; 60*t.^2; 24*t; 6; zeros(size(t)); zeros(size(t)); zeros(size(t))];
+% end
+% 
+% function f = d4poly3(t)
+%     f = [5040*t.^6; 3024*t.^5; 1680*t.^4; 840*t.^3; 360*t.^2; 120*t; 24; zeros(size(t)); zeros(size(t)); zeros(size(t)); zeros(size(t))];
+% end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function Ua = uni_ctrl(t, xa, S)
@@ -112,23 +176,53 @@ R = Rot(xa(3));
 yd = S.A*poly3(t);
 dyd = S.A*dpoly3(t);
 d2yd = S.A*d2poly3(t);
+d3yd = S.A*d3poly3(t);
+d4yd = S.A*d4poly3(t);
+
+% idx = floor(t*size(S.xs,2)/S.T) + 1;
+% 
+% if idx > size(S.xs,2)
+%     idx = size(S.xs,2);
+% end
+% 
+% yd = S.xs(1:2,idx);
+% dyd = S.xs(7:8,idx);
+% dyd_temp = diff(S.xs,1,2);
+% dyd_temp = [zeros(12,1) dyd_temp];
+% d2yd = dyd_temp(7:8,idx);
+% d2yd_temp = diff(dyd_temp, 1, 2);
+% d2yd_temp = [zeros(12,1) d2yd_temp];
+% d3yd = d2yd_temp(7:8,idx);
+% d3yd_temp = diff(d2yd_temp, 1, 2);
+% d3yd_temp = [zeros(12,1) d3yd_temp];
+% d4yd = d3yd_temp(7:8,idx);
 
 % get current output and calculate error terms
 y = uni_h(xa);
-dy = xa(4:6);
-% d2y = (1/S.m)*R*[0; xa(end-1)] + [0; -9.81];
+dy = xa(4:5);
+d2y = (1/S.m)*R*[0; xa(end-1)] + [0; -9.81];
+d3y = R*[-xa(end-1)*xa(6); xa(end)];
 
 % errors
 e = y - yd;
 de = dy - dyd;
-% d2e = d2y - d2yd;
+d2e = d2y - d2yd;
+d3e = d3y - d3yd;
 
-v = d2yd - S.k0*de - S.k1*e;
+% z-state
+B = zeros(8,8);
+B(1:2,3:4) = eye(2);
+B(3:4,5:6) = eye(2);
+B(5:6,7:8) = eye(2);
+B(7:8,:) = [-S.k0*eye(2), -S.k1*eye(2), -S.k2*eye(2), -S.k3*eye(2)];
+z = B*[e; de; d2e; d3e];
 
-u1 = S.m*v(2) + S.m*(9.81);
-u2 = S.J*(-S.k2*de(3) - S.k3*e(3));
+%virtual input
+v = d4yd - S.k3*d3e - S.k2*d2e - S.k1*de - S.k0*e;
 
-Ua = [u1; u2];
+Ua = [-S.J/xa(end-1), 0; 0, 1]*(S.m*R'*v - [-2*xa(end)*xa(6); -xa(end-1)*xa(6)^2]);
+
+% This Ua that this function returns is [u2; u1ddot]
 
 end
 
@@ -148,12 +242,14 @@ function dxa = uni_ode(t, xa, S)
 Ua = uni_ctrl(t, xa, S);
 R = Rot(xa(3));
 
-u1 = Ua(1);
-u2 = Ua(2);
+u2 = Ua(1);
+u1dDot = Ua(2);
 
 dxa = [xa(4:6);
        (1/S.m)*R*[0; xa(end-1)] + [0; -9.81];
-       u2/S.J];
+       u2/S.J;
+       xa(end);
+       u1dDot];
 
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
