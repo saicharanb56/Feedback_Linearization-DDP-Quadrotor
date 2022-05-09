@@ -41,9 +41,7 @@ d2yf = (1/S.m)*Rot(xf(3))*[0; S.u1] + [0; -9.81];
 % A = poly3_coeff(y0, dy0, d2y0, d3y0, d4y0, yf, dyf, d2yf, d3yf, d4yf, T);
 A = poly3_coeff(y0, dy0, d2y0, yf, dyf, d2yf, T);
 
-A = 
-A(:,1) = y0;
-A(:,4) = yf;
+% A = randn(2,7);
 
 % plot desired path
 X = A*poly3(0:.01:T);
