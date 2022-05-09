@@ -7,7 +7,7 @@ function A = quad_traj_track()
 
 
 % boundary conditions in state space
-x0 = [-5; -5; 0; 0; 0; 0];
+x0 = [5; 5; 0; 0; 0; 0];
 xf = [0; 0; 0; 0; 0; 0];
 T = 10;
 
@@ -25,6 +25,19 @@ S.u1dot = 1;
 S.u1ddot = 1;
 S.u2 = 1;
 
+% ddp trajectory generation
+desired = ddp_quad_obst_nl([-5; -5; 3.5], T);
+
+% modify to 2D
+yd_ddp = [ desired.xs(2,:);
+           desired.xs(1,:) * -1];
+plot(yd_ddp(1,:),yd_ddp(2,:))
+axis equal;
+traj_ts = linspace(0,T,size(yd_ddp,2));
+A = [ polyfit(traj_ts, yd_ddp(1,:), 6)
+      polyfit(traj_ts, yd_ddp(2,:), 6)];
+
+
 % boundary conditions in flat output space 
 y0 = uni_h(x0);
 yf = uni_h(xf);
@@ -39,7 +52,7 @@ d2yf = (1/S.m)*Rot(xf(3))*[0; S.u1] + [0; -9.81];
 
 % compute path coefficients
 % A = poly3_coeff(y0, dy0, d2y0, d3y0, d4y0, yf, dyf, d2yf, d3yf, d4yf, T);
-A = poly3_coeff(y0, dy0, d2y0, yf, dyf, d2yf, T);
+% A = poly3_coeff(y0, dy0, d2y0, yf, dyf, d2yf, T);
 
 % A = randn(2,7);
 
