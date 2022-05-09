@@ -1,4 +1,4 @@
-function A = quad_traj_track()
+% function A = quad_traj_track()
 % EN.530.678: HW#4 sample
 % 1) compute a reference path using a polynomial in flat output space
 % 2) track the path using backstepping
@@ -7,7 +7,7 @@ function A = quad_traj_track()
 
 
 % boundary conditions in state space
-x0 = [5; 5; 0; 0; 0; 0];
+x0 = [-7; 2; 0; 0; 0; 0];
 xf = [0; 0; 0; 0; 0; 0];
 T = 10;
 
@@ -26,25 +26,27 @@ S.u1ddot = 1;
 S.u2 = 1;
 
 % ddp trajectory generation
-desired = ddp_quad_obst_nl([-5; -5; 3.5], T);
-
+desired = ddp_quad_obst_nl([x0(1); 0; x0(2)], T);
+close all;
+%%
 % modify to 2D
-yd_ddp = [ desired.xs(2,:);
-           desired.xs(1,:) * -1];
-plot(yd_ddp(1,:),yd_ddp(2,:))
-axis equal;
-traj_ts = linspace(0,T,size(yd_ddp,2));
+yd_ddp = [ desired.xs(1,:);
+           desired.xs(3,:)];
+
+yd_ddp = [yd_ddp(:,1)+rand(size(yd_ddp,1),10)*0.1 yd_ddp];
+
+traj_ts = linspace(-1,T,size(yd_ddp,2));
 A = [ polyfit(traj_ts, yd_ddp(1,:), 6)
       polyfit(traj_ts, yd_ddp(2,:), 6)];
 
 
 % boundary conditions in flat output space 
-y0 = uni_h(x0);
-yf = uni_h(xf);
-dy0 = x0(4:5);
-dyf = xf(4:5);
-d2y0 = (1/S.m)*Rot(x0(3))*[0; S.u1] + [0; -9.81];
-d2yf = (1/S.m)*Rot(xf(3))*[0; S.u1] + [0; -9.81];
+% y0 = uni_h(x0);
+% yf = uni_h(xf);
+% dy0 = x0(4:5);
+% dyf = xf(4:5);
+% d2y0 = (1/S.m)*Rot(x0(3))*[0; S.u1] + [0; -9.81];
+% d2yf = (1/S.m)*Rot(xf(3))*[0; S.u1] + [0; -9.81];
 % d3y0 = (1/S.m)*Rot(x0(3))*[-S.u1*x0(6); S.u1dot];
 % d3yf = (1/S.m)*Rot(xf(3))*[-S.u1*xf(6); S.u1dot];
 % d4y0 = (1/S.m)*Rot(x0(3))*[-2*S.u1dot*x0(6); S.u1*x0(6)^2] + (1/S.m)*Rot(x0(3))*[-S.u1*S.u2/S.J; S.u1ddot];
@@ -58,9 +60,9 @@ d2yf = (1/S.m)*Rot(xf(3))*[0; S.u1] + [0; -9.81];
 
 % plot desired path
 X = A*poly3(0:.01:T);
-plot(X(1,:), X(2,:), '-r', 'LineWidth', 2)
+plot(X(1,:), X(2,:), '-r')
 hold on
-
+%%
 
 %%%%%%%%% TRAJECTORY TRACKING %%%%%%%%%%%%%
 S.A = A;
@@ -91,7 +93,7 @@ hold off
 % plot(ts, xas(:,3))
 % legend('x', 'y', 'yaw')
 
-end
+% end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 

@@ -7,7 +7,7 @@ function f = ddp_quad_obst_nl(initState, tf)
 
     % time horizon and segments
     tf = 30;
-    S.N = 100;
+    S.N = 1000;
     S.h = tf/S.N;
     
     % cost function parameters
@@ -23,9 +23,9 @@ function f = ddp_quad_obst_nl(initState, tf)
     % initial state
     x0 = [initState; zeros(9,1)];
     
-    S.os(1).p = [-4;0;2.2];
+    S.os(1).p = [-5; 0; 0.5];
     S.os(1).r = 1;
-    S.os(2).p = [-4; -4; 3.5];
+    S.os(2).p = [-2.5; 0; 0];
     S.os(2).r = 1;
     S.ko = 1000;
     
@@ -40,7 +40,7 @@ function f = ddp_quad_obst_nl(initState, tf)
     
     subplot(1,2,1)
     plot3(xs(1,:), xs(2,:), xs(3,:), 'b')
-    hold on
+    hold on; grid on;
     
     if isfield(S, 'os')
         [sphereX,sphereY,sphereZ] = sphere;
