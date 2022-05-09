@@ -1,11 +1,12 @@
 clear; clc;
 
-z = zeros(2);
+z = zeros(3);
 
-e = eye(2);
+e = eye(3);
 
-range = 3;
-ks = linspace(-range,range,10);
+
+ks = linspace(0,1,11);
+ks = linspace(0,1,11);
 
 K1s = [];
 
