@@ -24,8 +24,8 @@ S.g = -9.8;
 T = 10;
 
 % initial states
-xyz0 = [2 1 0]';
-abc0 = [0 0 -1]';
+xyz0 = [0 0 1]';
+abc0 = [0 0 0]';
 vel0 = [0 0 0]';
 pqr0 = [0 0 0]';
 dxyzc = [0 0 0 0 0 0 0]';
@@ -33,7 +33,7 @@ u1du1 = [S.m*S.g 0]';   % assume u1 compensates gravatiy at t=0
 sa0 = [xyz0; abc0; vel0; pqr0; dxyzc; u1du1];
 
 % desired output
-xyzcd = [0 -1 -2 1]';
+xyzcd = [0 0 0 0]';
 dxyzcd = [0 0 0 0]';
 
 
@@ -42,9 +42,11 @@ Y = [[xyz0;abc0(3)] [vel0;pqr0(3)] zeros(4,3) xyzcd dxyzcd zeros(4,3)];
 L = [lambda(0,1:5) lambda(T,1:5)];
 S.A = Y / L;
 
+% add intial perturb
+sa0 = sa0 + [0; 0; 0.1; zeros(18,1)];
 
 % controller
-S.k0 = 1; S.k1 = 1; S.k2 = 1; S.k3 = 1; S.k4= 1; S.k5 = 1; 
+S.k0 = 1/3; S.k1 = 5/3; S.k2 = 3; S.k3 = 3; S.k4= 7/3; S.k5 = 3; 
 
 [ts, sas] = ode45(@(t,sa) quadrotor_ode(t,sa,S), [0 T], sa0);
 

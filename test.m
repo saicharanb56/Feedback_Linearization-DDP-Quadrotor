@@ -1,69 +1,62 @@
 clear; clc;
-xyz0 = [-5 -5 3.5]';
-T  = 10;
-S.T = T;
-desired = ddp_quad_obst_nl(xyz0, T);
-clf;
 
-S.yd = desired.xs;
-S.ydDot1 = diff(S.yd, 1, 2)*T/size(S.yd,2);
-S.ydDot1 = [zeros(size(S.yd,1),1) S.ydDot1];
-S.ydDot2 = diff(S.ydDot1, 1, 2)*T/size(S.ydDot1,2);
-S.ydDot2 = [zeros(size(S.ydDot2,1),1) S.ydDot2];
-S.ydDot3 = diff(S.ydDot2, 1, 2)*T/size(S.ydDot2,2);
-S.ydDot3 = [zeros(size(S.ydDot3,1),1) S.ydDot3];
-S.ydDot4 = diff(S.ydDot3, 1, 2)*T/size(S.ydDot3,2);
-S.ydDot4 = [zeros(size(S.ydDot4,1),1) S.ydDot4];
+% initial states
+xyz0 = [2 1 0]';
+abc0 = [0 0 -1]';
+vel0 = [0 0 0]';
+pqr0 = [0 0 0]';
+dxyzc = [0 0 0 0 0 0 0]';
 
-Yds = [];
+% desired output
+xyzcd = [0 -1 -2 1]';
+dxyzcd = [0 0 0 0]';
 
-ts = linspace(0, S.T, 333);
-% for t = ts
-% 
-%     traj_tstep = S.T/size(S.yd,2);
-%     idx = floor(t/traj_tstep) + 1;
-%     idx = min(idx, size(S.yd,2)-1);
-% 
-%     oi = [1 2 3 6];
-% 
-%     Y = [S.yd(oi,idx) S.yd(oi,idx+1)];
-% 
-%     L = [lambda(0.5,1) lambda(1.5,1)];
-%     A = Y / L;
-% 
-%     if t ~= S.T
-%         percent = t/traj_tstep - (idx - 1) + 0.5;
-%     else
-%         percent = 1 + 0.5;
-%     end
-% 
-%     Yd = A * lambda(percent, 1);
-%     dYd = A * lambda(percent, 2);
-%     d2Yd = A * lambda(percent, 3);
-%     d3Yd = A * lambda(percent, 4);
-%     d4Yd = A * lambda(percent, 5);
-% 
-% 
-%     Yds = [Yds Yd];
-% 
-% end
-% ys = Yds
 
-idx = 1;
+% A matrix for virtual control input
+T = 30;
+Y = [[xyz0;abc0(3)] [vel0;pqr0(3)] zeros(4,3) xyzcd dxyzcd zeros(4,3)];
+L = [lambda(0,1:5) lambda(T,1:5)];
+A1 = Y / L;
 
-yd = S.yd;
-traj_ts = linspace(0, T, size(S.yd,2));
-p = polyfit(traj_ts,yd(idx,:),10);
+pv = 1;
+Y = [[xyz0;abc0(3)] [vel0;pqr0(3)] zeros(4,3) xyzcd dxyzcd zeros(4,3)];
+L = [lambda(0,1:5) lambda(1,1:5)];
+A2 = Y / L;
+
+
+ys1 = [];
+ys2 = [];
 
 ts = linspace(0, T, 200);
-ys = polyval(p, ts);
+for t = ts
 
+    % desired output
+    Yd = A1 * lambda(t, 1);
+    dYd = A1 * lambda(t, 2);
+    d2Yd = A1 * lambda(t, 3);
+    d3Yd = A1 * lambda(t, 4);
+    d4Yd = A1 * lambda(t, 5);
 
+    ys1 = [ys1 d2Yd];
+    
+    % desired output
+    p = t / T;
+    Yd = A2 * lambda(p, 1);
+    dYd = A2 * lambda(p, 2);
+    d2Yd = A2 * lambda(p, 3);
+    d3Yd = A2 * lambda(p, 4);
+    d4Yd = A2 * lambda(p, 5);
+
+    ys2 = [ys2 d2Yd];
+
+end
+
+idx = 3;
 figure(1); clf;
 
-plot(traj_ts, S.yd(idx,:), '*')
+plot(ts, ys1(idx,:), '-')
 hold on;
-plot(ts, ys(1,:), '.-')
+% plot(ts, ys2(idx,:), '-')
 
 
 function Li = lambda(t, i)
