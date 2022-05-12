@@ -73,6 +73,9 @@ x = x0 + [0.1; 0.1; 0; 0; 0; 0];
 % augmented state with dynamic compensator, i.e xi=u1
 xa = [x; S.u1; S.u1dot];
 
+global Us 
+Us = [];
+
 % simulate system
 [ts, xas] = ode45(@uni_ode, [0 T], xa, [], S);
 
@@ -89,6 +92,12 @@ hold off
 % plot(ts, xas(:,2))
 % plot(ts, xas(:,3))
 % legend('x', 'y', 'yaw')
+%%
+figure(2); hold on
+plot(Us(:,1), Us(:,2), 'b', 'LineWidth', 2)
+plot(Us(:,1), Us(:,3), 'r', 'LineWidth', 2)
+xlabel('t'); ylabel('u')
+legend({'u1', 'u2'})
 
 % end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -228,6 +237,9 @@ u1dDot = Ua(2);
 %        sin(xa(3))*x4;
 %        tan(u1)*x4/S.L;
 %        u2];
+
+global Us 
+Us = [Us; t xa(end-1) u2];
 
 dxa = [xa(4:6);
        (1/S.m)*R*[0; xa(end-1)] + [0; -9.81];

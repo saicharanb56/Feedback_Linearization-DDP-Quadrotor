@@ -56,6 +56,9 @@ x = x0 + [2; 2; zeros(4,1)];
 % augmented state with dynamic compensator, i.e xi=[u1; u1Dot]
 xa = [x; S.u1; S.u1dot];
 
+global Us 
+Us = [];
+
 % simulate system
 [ts, xas] = ode45(@uni_ode, [0 T], xa, [], S);
 
@@ -75,6 +78,12 @@ legend('x', 'y', 'yaw')
 title('Variation of states over time')
 xlabel('Time in seconds'); ylabel('States');
 hold off
+
+figure(3); hold on
+plot(Us(:,1), Us(:,2), 'b', 'LineWidth', 2)
+plot(Us(:,1), Us(:,3), 'r', 'LineWidth', 2)
+xlabel('t'); ylabel('u')
+legend({'u1', 'u2'})
 
 % end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -175,6 +184,9 @@ R = Rot(xa(3));
 
 u2 = Ua(1);
 u1dDot = Ua(2);
+
+global Us 
+Us = [Us; t xa(end-1) u2];
 
 dxa = [xa(4:6);
        (1/S.m)*R*[0; xa(end-1)] + [0; -9.81];
