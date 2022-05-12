@@ -51,7 +51,7 @@ S.A = A;
 S.k0 = 20; S.k1 = 80; S.k2 = 200; S.k3 = 3;
 
 % perturb initial condition
-x = x0 + [0; 0; zeros(4,1)];
+x = x0 + [2; 2; zeros(4,1)];
 
 % augmented state with dynamic compensator, i.e xi=[u1; u1Dot]
 xa = [x; S.u1; S.u1dot];
@@ -75,16 +75,6 @@ legend('x', 'y', 'yaw')
 
 % end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
-% function A = poly3_coeff(y0, dy0, d2y0, d3y0, d4y0, yf, dyf, d2yf, d3yf, d4yf, T)
-% % computes cubic curve connecting (y0,dy0) and (yf, dyf) at time T
-% 
-% Y = [y0, dy0, d2y0, d3y0, d4y0, yf, dyf, d2yf, d3yf, d4yf];
-% L = [poly3(0), dpoly3(0), d2poly3(0), d3poly3(0), d4poly3(0) ...
-%      poly3(T), dpoly3(T), d2poly3(T), d3poly3(T), d4poly3(T)];
-% A = Y/L;
-% end
 
 function A = poly3_coeff(y0, dy0, d2y0, yf, dyf, d2yf, T)
 % computes cubic curve connecting (y0,dy0) and (yf, dyf) at time T

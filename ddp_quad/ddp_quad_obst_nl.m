@@ -66,7 +66,7 @@ function f = ddp_quad_obst_nl(initState, tf)
       plot3(xs(1,:), xs(2,:), xs(3,:), '-b');
     end
     
-    plot3(xs(1,:), xs(2,:), xs(3,:), '-g', 'LineWidth', 3);
+    plot3(xs(1,:), xs(2,:), xs(3,:), '-g', 'LineWidth', 5);
     axis equal
     hold off
     
