@@ -51,7 +51,7 @@ S.A = A;
 S.k0 = 20; S.k1 = 80; S.k2 = 200; S.k3 = 3;
 
 % perturb initial condition
-x = x0 + [2; 2; zeros(4,1)];
+x = x0 + [0; 0; zeros(4,1)];
 
 % augmented state with dynamic compensator, i.e xi=[u1; u1Dot]
 xa = [x; S.u1; S.u1dot];
@@ -122,26 +122,6 @@ function f = d4poly3(t)
     f = [360*t.^2; 120*t; 24; zeros(size(t)); zeros(size(t)); zeros(size(t)); zeros(size(t))];
 end
 
-% function f = poly3(t)
-%     f = [t.^10; t.^9; t.^8; t.^7; t.^6; t.^5; t.^4; t.^3; t.^2; t; ones(size(t))];
-% end
-% 
-% function f = dpoly3(t)
-%     f = [10*t.^9; 9*t.^8; 8*t.^7; 7*t.^6; 6*t.^5; 5*t.^4; 4*t.^3; 3*t.^2; 2*t; ones(size(t)); zeros(size(t))];
-% end
-% 
-% function f = d2poly3(t)
-%     f = [90*t.^8; 72*t.^7; 56*t.^6; 42*t.^5; 30*t.^4; 20*t.^3; 12*t.^2; 6*t; 2; zeros(size(t)); zeros(size(t))];
-% end
-% 
-% function f = d3poly3(t)
-%     f = [720*t.^7; 504*t.^6; 336*t.^5; 210*t.^4; 120*t.^3; 60*t.^2; 24*t; 6; zeros(size(t)); zeros(size(t)); zeros(size(t))];
-% end
-% 
-% function f = d4poly3(t)
-%     f = [5040*t.^6; 3024*t.^5; 1680*t.^4; 840*t.^3; 360*t.^2; 120*t; 24; zeros(size(t)); zeros(size(t)); zeros(size(t)); zeros(size(t))];
-% end
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function Ua = uni_ctrl(t, xa, S)
@@ -154,24 +134,6 @@ dyd = S.A*dpoly3(t);
 d2yd = S.A*d2poly3(t);
 d3yd = S.A*d3poly3(t);
 d4yd = S.A*d4poly3(t);
-
-% idx = floor(t*size(S.xs,2)/S.T) + 1;
-% 
-% if idx > size(S.xs,2)
-%     idx = size(S.xs,2);
-% end
-% 
-% yd = S.xs(1:2,idx);
-% dyd = S.xs(7:8,idx);
-% dyd_temp = diff(S.xs,1,2);
-% dyd_temp = [zeros(12,1) dyd_temp];
-% d2yd = dyd_temp(7:8,idx);
-% d2yd_temp = diff(dyd_temp, 1, 2);
-% d2yd_temp = [zeros(12,1) d2yd_temp];
-% d3yd = d2yd_temp(7:8,idx);
-% d3yd_temp = diff(d2yd_temp, 1, 2);
-% d3yd_temp = [zeros(12,1) d3yd_temp];
-% d4yd = d3yd_temp(7:8,idx);
 
 % get current output and calculate error terms
 y = uni_h(xa);
