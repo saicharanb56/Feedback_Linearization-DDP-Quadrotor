@@ -1,15 +1,10 @@
-% function A = quad_traj_track()
-% EN.530.678: HW#4 sample
-% 1) compute a reference path using a polynomial in flat output space
-% 2) track the path using backstepping
-%
-% M. Kobilarov, Spring 2014
-
+addpath('ddp_quad\')
+addpath('utils\')
 
 % boundary conditions in state space
 x0 = [-7; 2; 0; 0; 0; 0];
 xf = [0; 0; 0; 0; 0; 0];
-T = 10;
+T = 30;
 S.T = T;
 
 %%%%%%%%% TRAJECTORY GENERATION %%%%%%%%%%%%%
@@ -26,7 +21,7 @@ S.u1dot = 1;
 S.u1ddot = 1;
 S.u2 = 1;
 
-% ddp trajectory generation
+% ddp trajectory generation in 3D
 desired = ddp_quad_obst_nl([x0(1); 0; x0(2)], T);
 close all;
 %%
@@ -43,25 +38,6 @@ traj_ts = linspace(-1,T,size(yd_ddp,2));
 A = [ polyfit(traj_ts, yd_ddp(1,:), 6)
       polyfit(traj_ts, yd_ddp(2,:), 6)];
 
-
-% boundary conditions in flat output space 
-% y0 = uni_h(x0);
-% yf = uni_h(xf);
-% dy0 = x0(4:5);
-% dyf = xf(4:5);
-% d2y0 = (1/S.m)*Rot(x0(3))*[0; S.u1] + [0; -9.81];
-% d2yf = (1/S.m)*Rot(xf(3))*[0; S.u1] + [0; -9.81];
-% d3y0 = (1/S.m)*Rot(x0(3))*[-S.u1*x0(6); S.u1dot];
-% d3yf = (1/S.m)*Rot(xf(3))*[-S.u1*xf(6); S.u1dot];
-% d4y0 = (1/S.m)*Rot(x0(3))*[-2*S.u1dot*x0(6); S.u1*x0(6)^2] + (1/S.m)*Rot(x0(3))*[-S.u1*S.u2/S.J; S.u1ddot];
-% d4yf = (1/S.m)*Rot(xf(3))*[-2*S.u1dot*xf(6); S.u1*xf(6)^2] + (1/S.m)*Rot(xf(3))*[-S.u1*S.u2/S.J; S.u1ddot];
-
-% compute path coefficients
-% A = poly3_coeff(y0, dy0, d2y0, d3y0, d4y0, yf, dyf, d2yf, d3yf, d4yf, T);
-% A = poly3_coeff(y0, dy0, d2y0, yf, dyf, d2yf, T);
-
-% A = randn(2,7);
-
 % plot desired path
 X = A*poly3(0:.01:T);
 plot(X(1,:), X(2,:), '-r', 'LineWidth', 2)
@@ -75,9 +51,9 @@ S.A = A;
 S.k0 = 20; S.k1 = 80; S.k2 = 200; S.k3 = 3;
 
 % perturb initial condition
-x = x0 + [0.5; 0.5; 0; 0; 0; 0];
+x = x0 + [2; 2; zeros(4,1)];
 
-% augmented state with dynamic compensator, i.e xi=u1
+% augmented state with dynamic compensator, i.e xi=[u1; u1Dot]
 xa = [x; S.u1; S.u1dot];
 
 % simulate system
@@ -90,12 +66,12 @@ title('Trajectory Tracking of Quadcopter')
 xlabel('x1'); ylabel('x2');
 hold off
 
-% figure(2);
-% plot(ts, xas(:,1))
-% hold on
-% plot(ts, xas(:,2))
-% plot(ts, xas(:,3))
-% legend('x', 'y', 'yaw')
+figure(2);
+plot(ts, xas(:,1))
+hold on
+plot(ts, xas(:,2))
+plot(ts, xas(:,3))
+legend('x', 'y', 'yaw')
 
 % end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
