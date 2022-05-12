@@ -2,11 +2,10 @@ function f = ddp_quad_obst_nl(initState, tf)
 
     if nargin < 2
         initState = [-5; -5; 3.5];
-        tf = 10;
+        tf = 30;
     end
 
     % time horizon and segments
-    tf = 30;
     S.N = 1000;
     S.h = tf/S.N;
     

@@ -2,7 +2,7 @@ addpath('ddp_quad\')
 addpath('utils\')
 
 % boundary conditions in state space
-x0 = [-7; 2; 0; 0; 0; 0];
+x0 = [-7; 2; pi/12; 0; 0; 0];
 xf = [0; 0; 0; 0; 0; 0];
 T = 30;
 S.T = T;
@@ -72,6 +72,9 @@ hold on
 plot(ts, xas(:,2))
 plot(ts, xas(:,3))
 legend('x', 'y', 'yaw')
+title('Variation of states over time')
+xlabel('Time in seconds'); ylabel('States');
+hold off
 
 % end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
