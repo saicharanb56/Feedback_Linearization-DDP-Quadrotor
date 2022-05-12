@@ -1,13 +1,9 @@
 clear; clc;
 
 z = zeros(3);
-
 e = eye(3);
 
-
-ks = linspace(0,1,11);
-ks = linspace(0,1,11);
-
+ks = linspace(0,2,11);
 K1s = [];
 
 for a = ks
