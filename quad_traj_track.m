@@ -1,10 +1,7 @@
 % function A = quad_traj_track()
-% EN.530.678: HW#4 sample
-% 1) compute a reference path using a polynomial in flat output space
-% 2) track the path using backstepping
-%
-% M. Kobilarov, Spring 2014
 
+addpath('ddp_quad\')
+addpath('utils\')
 
 % boundary conditions in state space
 x0 = [-7; 2; 0; 0; 0; 0];
